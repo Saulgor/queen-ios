@@ -23,3 +23,24 @@ class ViewController: UIViewController {
 
 }
 
+class LanguageHelper {
+    static let sharedInstance = LanguageHelper()
+    
+    // These are the properties you can store in your singleton
+    func StringforKey(key:String)->String{
+        let lan:String = UserDefaults.standard.object(forKey: "language") as! String
+        let string:String?
+        if lan.hasPrefix("zh"){
+            let path = Bundle.main.path(forResource: "zh-Hant", ofType: "lproj")
+            let bundle = Bundle(path: path!)
+            string = bundle?.localizedString(forKey: key, value: nil, table: nil)
+        }else{
+            let path = Bundle.main.path(forResource: "en", ofType: "lproj")
+            let bundle = Bundle(path: path!)
+            string = bundle?.localizedString(forKey: key, value: nil, table: nil)
+        }
+        
+        return string!
+    }
+}
+
