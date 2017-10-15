@@ -558,10 +558,11 @@ class ChatInputTool : UIView {
         let v = UITextField()
         v.translatesAutoresizingMaskIntoConstraints = false
         v.borderStyle = .none
-        v.font = UIFont.FontTextStyleSubheadline
+        v.font = UIFont.systemFont(ofSize: 15)
         v.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 20))
         v.leftViewMode = .always
         v.returnKeyType = .send
+        v.placeholder = "Message..."
         return v
     }()
 
@@ -571,7 +572,9 @@ class ChatInputTool : UIView {
         v.backgroundColor = UIColor.white
         v.layer.cornerRadius = 4
         v.layer.masksToBounds = true
-        v.setImage(UIImage(named:"arrowRightCircleSimpleLineIconsCopy"), for: .normal)
+        v.setTitle("Send", for: .normal)
+        v.setTitleColor(UIColor.lightQueenColor(), for: .normal)
+        v.titleLabel?.font = UIFont.systemFont(ofSize: 15)
         v.isEnabled = false
         return v
     }()
@@ -601,10 +604,10 @@ class ChatInputTool : UIView {
         self.addSubview(senderTool)
         self.addSubview(imageTool)
         vd = ["inputTool" : inputTool , "senderTool" : senderTool,"imageTool":imageTool]
-        self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "|-10-[imageTool(40)]-10-[inputTool]-10-[senderTool(40)]-10-|", options: [], metrics: nil, views: vd))
+        self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "|-10-[inputTool]-10-[senderTool(60)]-10-|", options: [], metrics: nil, views: vd))
         self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-[inputTool]-|", options: [], metrics: nil, views: vd))
         self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat:"V:|-[senderTool]-|", options: [], metrics: nil, views: vd))
-        self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat:"V:|-[imageTool]-|", options: [], metrics: nil, views: vd))
+//        self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat:"V:|-[imageTool]-|", options: [], metrics: nil, views: vd))
         
 //        inputTool.rac_textSignal().subscribeNext({ (next) in
 //            if let text = next as? String{

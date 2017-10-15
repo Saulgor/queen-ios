@@ -7,6 +7,7 @@ target 'queen-ios' do
   pod 'SDWebImage'
   pod 'SwiftyJSON'
   pod 'SocketRocket'
+  pod 'Alamofire', '~> 4.5'
   
 
   # Pods for queen-ios

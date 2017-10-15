@@ -8,6 +8,15 @@
 
 import Foundation
 import SwiftyJSON
+import Alamofire
+
+
+enum MessageType{
+    case Text
+    case Image
+    case News
+    case Stock
+}
 
 class Message {
     var message_id:NSNumber = 0
@@ -27,6 +36,22 @@ class Message {
         self.content = content
         self.attachment = attachment
         self.isFromSocket = isFromSocket
+    }
+    
+    static func postTextMessageWithBlock(chat_id:NSNumber,text:String,block:ChatMessageResultBlock){
+        Alamofire.request(TUASK_HOSTNAME + API_VERSION + "").responseJSON { response in
+            print("Request: \(String(describing: response.request))")   // original url request
+            print("Response: \(String(describing: response.response))") // http url response
+            print("Result: \(response.result)")                         // response serialization result
+            
+            if let json = response.result.value {
+                print("JSON: \(json)") // serialized json response
+            }
+            
+            if let data = response.data, let utf8Text = String(data: data, encoding: .utf8) {
+                print("Data: \(utf8Text)") // original server data as UTF8 string
+            }
+        }
     }
 }
 

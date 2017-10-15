@@ -162,27 +162,39 @@
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="qrU-4c-Qy8">
                                                 <rect key="frame" x="375" y="0.0" width="375" height="667"/>
                                                 <subviews>
-                                                    <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="J7w-aA-BRW" customClass="ChatTableView" customModule="queen_ios" customModuleProvider="target">
-                                                        <rect key="frame" x="0.0" y="20" width="375" height="587"/>
+                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="VWJ-9B-EVU">
+                                                        <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+                                                        <subviews>
+                                                            <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="J7w-aA-BRW" customClass="ChatTableView" customModule="queen_ios" customModuleProvider="target">
+                                                                <rect key="frame" x="0.0" y="0.0" width="375" height="607"/>
+                                                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                            </tableView>
+                                                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="b0n-yy-Kjc" customClass="ChatInputTool" customModule="queen_ios" customModuleProvider="target">
+                                                                <rect key="frame" x="0.0" y="607" width="375" height="60"/>
+                                                                <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                                                <constraints>
+                                                                    <constraint firstAttribute="height" constant="60" id="cJ3-xd-UFD"/>
+                                                                </constraints>
+                                                            </view>
+                                                        </subviews>
                                                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                                                    </tableView>
-                                                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="b0n-yy-Kjc">
-                                                        <rect key="frame" x="0.0" y="607" width="375" height="60"/>
-                                                        <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
                                                         <constraints>
-                                                            <constraint firstAttribute="height" constant="60" id="cJ3-xd-UFD"/>
+                                                            <constraint firstAttribute="trailing" secondItem="b0n-yy-Kjc" secondAttribute="trailing" id="0Ri-hE-aym"/>
+                                                            <constraint firstItem="J7w-aA-BRW" firstAttribute="leading" secondItem="VWJ-9B-EVU" secondAttribute="leading" id="6Xw-2x-4xp"/>
+                                                            <constraint firstItem="J7w-aA-BRW" firstAttribute="top" secondItem="VWJ-9B-EVU" secondAttribute="top" id="Aqu-Ld-QSK"/>
+                                                            <constraint firstAttribute="bottom" secondItem="b0n-yy-Kjc" secondAttribute="bottom" id="g8G-eo-roz"/>
+                                                            <constraint firstAttribute="trailing" secondItem="J7w-aA-BRW" secondAttribute="trailing" id="jCR-OA-ANp"/>
+                                                            <constraint firstItem="b0n-yy-Kjc" firstAttribute="leading" secondItem="VWJ-9B-EVU" secondAttribute="leading" id="k5V-mH-97l"/>
+                                                            <constraint firstItem="b0n-yy-Kjc" firstAttribute="top" secondItem="J7w-aA-BRW" secondAttribute="bottom" id="sn0-AI-TPS"/>
                                                         </constraints>
                                                     </view>
                                                 </subviews>
                                                 <color key="backgroundColor" red="0.96470588239999999" green="0.96470588239999999" blue="0.96470588239999999" alpha="1" colorSpace="calibratedRGB"/>
                                                 <constraints>
-                                                    <constraint firstItem="b0n-yy-Kjc" firstAttribute="leading" secondItem="qrU-4c-Qy8" secondAttribute="leading" id="9LI-CP-hT3"/>
-                                                    <constraint firstItem="J7w-aA-BRW" firstAttribute="leading" secondItem="qrU-4c-Qy8" secondAttribute="leading" id="A1H-tx-jzf"/>
-                                                    <constraint firstAttribute="trailing" secondItem="b0n-yy-Kjc" secondAttribute="trailing" id="HkW-7s-FP3"/>
-                                                    <constraint firstAttribute="trailing" secondItem="J7w-aA-BRW" secondAttribute="trailing" id="Yj6-UV-RoO"/>
-                                                    <constraint firstAttribute="bottom" secondItem="b0n-yy-Kjc" secondAttribute="bottom" id="clu-N1-zyf"/>
-                                                    <constraint firstItem="J7w-aA-BRW" firstAttribute="top" secondItem="qrU-4c-Qy8" secondAttribute="top" constant="20" id="i5j-iW-Tqp"/>
-                                                    <constraint firstItem="b0n-yy-Kjc" firstAttribute="top" secondItem="J7w-aA-BRW" secondAttribute="bottom" id="iTr-Pt-FbK"/>
+                                                    <constraint firstAttribute="trailing" secondItem="VWJ-9B-EVU" secondAttribute="trailing" id="8aJ-hc-tzh"/>
+                                                    <constraint firstItem="VWJ-9B-EVU" firstAttribute="leading" secondItem="qrU-4c-Qy8" secondAttribute="leading" id="hfH-IJ-KOo"/>
+                                                    <constraint firstItem="VWJ-9B-EVU" firstAttribute="top" secondItem="qrU-4c-Qy8" secondAttribute="top" id="ly5-DO-pr2"/>
+                                                    <constraint firstAttribute="bottom" secondItem="VWJ-9B-EVU" secondAttribute="bottom" id="x5n-k0-s97"/>
                                                 </constraints>
                                             </view>
                                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Hpa-nz-xZP">
@@ -236,8 +248,9 @@
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="chatBottomConstraint" destination="g8G-eo-roz" id="s9s-EA-YfQ"/>
                         <outlet property="chatTable" destination="J7w-aA-BRW" id="4vn-I2-Kkb"/>
-                        <outlet property="footerContrainer" destination="b0n-yy-Kjc" id="peq-io-H1K"/>
+                        <outlet property="chatTool" destination="b0n-yy-Kjc" id="bBg-GM-3Wf"/>
                         <outlet property="scrollView" destination="Iul-ip-54Y" id="TiX-pU-9LC"/>
                         <outlet property="scrollViewContainer1" destination="mi2-DE-bvI" id="vVl-4a-qV5"/>
                         <outlet property="scrollViewContainer2" destination="qrU-4c-Qy8" id="6u6-vl-W9Y"/>
@@ -246,7 +259,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="24.800000000000001" y="36.431784107946029"/>
+            <point key="canvasLocation" x="-487.19999999999999" y="228.93553223388307"/>
         </scene>
     </scenes>
 </document>

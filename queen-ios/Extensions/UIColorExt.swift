@@ -29,4 +29,11 @@ public extension UIColor {
         return UIColor.RGBColor(red: 246, green: 246, blue: 246)
     }
     
+    public class func deepQueenColor() -> UIColor {
+        return UIColor.RGBColor(red: 51, green: 5, blue: 90)
+    }
+    
+    public class func lightQueenColor() -> UIColor {
+        return UIColor.RGBColor(red: 124, green: 35, blue: 201)
+    }
 }

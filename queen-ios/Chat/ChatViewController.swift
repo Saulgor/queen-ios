@@ -28,7 +28,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         }
     }
     
-    
+    var chat_id:NSNumber?
     var _webSocket:SRWebSocket?
     
     var cover:UIButton!
@@ -45,6 +45,16 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         }
     }
     
+    
+    @IBOutlet weak var chatTool: ChatInputTool!{
+        didSet{
+            chatTool.inputTool.delegate = self
+            chatTool.translatesAutoresizingMaskIntoConstraints = false
+            chatTool.backgroundColor = UIColor.white
+        }
+    }
+    @IBOutlet weak var chatBottomConstraint: NSLayoutConstraint!
+    
     var vd : [String : AnyObject] = [String : AnyObject]()
     
     var testString1:String = "Hello"
@@ -54,7 +64,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     var button1:UIButton!
     var button2:UIButton!
     
-    @IBOutlet weak var footerContrainer: UIView!
+//    @IBOutlet weak var footerContrainer: UIView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -83,6 +93,11 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         swipeRight.direction = UISwipeGestureRecognizerDirection.right
         self.scrollView.addGestureRecognizer(swipeLeft)
         self.scrollView.addGestureRecognizer(swipeRight)
+        
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidShow(notification:)), name: NSNotification.Name.UIKeyboardDidShow, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+//        NotificationCenter.default.addObserver(self, selector: #selector(ChatViewController.fetchChatMessages), name: NSNotification.Name(rawValue: "ApplicationWillEnterForegroundFetchMessages"), object: nil)
     }
     
     @objc func respondToSwipeGesture(gesture: UIGestureRecognizer) {
@@ -126,26 +141,26 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        createSenderButtons()
+//        createSenderButtons()
     }
     
     func createSenderButtons() {
         width1 = testString1.widthWithConstrainedHeight(35, font: UIFont.boldSystemFont(ofSize: 15)) + 40
         width2 = testString2.widthWithConstrainedHeight(35, font: UIFont.boldSystemFont(ofSize: 15)) + 40
-        let leading = (footerContrainer.frame.width - (width1 + width2 + 10))/2
+        let leading = (chatTool.frame.width - (width1 + width2 + 10))/2
         button1 = UIButton(frame: CGRect(x:leading, y:60, width:width1, height:35))
         button1.setBackgroundImage(UIImage(named: "bubbleRPurple"), for: .normal)
         button1.setTitle(testString1, for: .normal)
         button1.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
         button1.addTarget(self, action: #selector(ChatViewController.onLeftButtonTouched(sender:)), for: .touchUpInside)
-        footerContrainer.addSubview(button1)
+        chatTool.addSubview(button1)
         
         button2 = UIButton(frame: CGRect(x:leading + width1 + 10, y:60, width:2, height:35))
         button2.setBackgroundImage(UIImage(named: "bubbleRPurple"), for: .normal)
         button2.setTitle(testString2, for: .normal)
         button2.titleLabel?.font = UIFont.boldSystemFont(ofSize: 15)
         button2.addTarget(self, action: #selector(ChatViewController.onRightButtonTouched(sender:)), for: .touchUpInside)
-        footerContrainer.addSubview(button2)
+        chatTool.addSubview(button2)
         UIView.animate(withDuration: 0.2, delay: 0.3, options: .curveEaseInOut, animations: {
             self.button1.frame = CGRect(x:leading, y:10, width:self.width1, height:35)
         }) { (succeed) in}
@@ -166,7 +181,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
             height = chatTable.frame.height-50
         }
         UIView.animate(withDuration: 0.8, delay: 1, options: .curveEaseInOut, animations: {
-            self.button1.frame = CGRect(x:self.footerContrainer.frame.width - self.width1 - 13, y: -(self.view.frame.height - self.footerContrainer.frame.height - height - 30), width: self.width1, height:35)
+            self.button1.frame = CGRect(x:self.chatTool.frame.width - self.width1 - 13, y: -(self.view.frame.height - self.chatTool.frame.height - height - 30), width: self.width1, height:35)
             self.button1.alpha = 0
         }) { (succeed) in
             self.chatTable.data?.removeLastObject()
@@ -188,7 +203,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
             height = chatTable.frame.height-50
         }
         UIView.animate(withDuration: 0.8, delay: 1, options: .curveEaseInOut, animations: {
-            self.button2.frame = CGRect(x:self.footerContrainer.frame.width - self.width2 - 13, y: -(self.view.frame.height - self.footerContrainer.frame.height - height - 30), width:self.width2, height:35)
+            self.button2.frame = CGRect(x:self.chatTool.frame.width - self.width2 - 13, y: -(self.view.frame.height - self.chatTool.frame.height - height - 30), width:self.width2, height:35)
             self.button2.alpha = 0
         }) { (succeed) in
             self.chatTable.data?.removeLastObject()
@@ -208,7 +223,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         
     }
     
-    func fetchChatMessages() {
+    @objc func fetchChatMessages() {
         let array = NSMutableArray()
         array.add(Message(message_type: "text", content: "An eclectic mix of Lovestruck and Datetix members", attachment: "",isFromSocket: false))
         array.add(Message(message_type: "text", content: "Hosted at Magnum", attachment: "",isFromSocket: false))
@@ -432,12 +447,12 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     
     
     func renderTableView(){
-//        if let txt = chatTool.inputTool.text {
-//            Message.postTextMessageWithBlock(chat_id, text: txt, block: { (message, error) in
-//                self.chatTool.inputTool.text = ""
-//            })
+        if let txt = chatTool.inputTool.text {
+            Message.postTextMessageWithBlock(chat_id: chat_id!, text: txt, block: { (message, error) in
+                self.chatTool.inputTool.text = ""
+            })
             
-//        }
+        }
         
     }
     
@@ -452,6 +467,44 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     
     @objc func scrollTab(){
         chatTable.scrollToBottom(animated: true)
+    }
+    
+    
+    //
+    
+    @objc func keyboardWillShow(notification:NSNotification){
+        if let userInfo = notification.userInfo {
+            if let keyboardSize = (userInfo[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
+                self.addCover()
+                //self.view.frame.origin.y =  -keyboardSize.height + 64
+                chatBottomConstraint.constant = keyboardSize.height
+                chatTable.scrollToBottom(animated: true)
+                // ...
+            }
+        }
+    }
+    
+    @objc func keyboardDidShow(notification:NSNotification){
+        if let userInfo = notification.userInfo {
+            if let keyboardSize = (userInfo[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
+                self.addCover()
+                //self.view.frame.origin.y =  -keyboardSize.height + 64
+                chatBottomConstraint.constant = keyboardSize.height
+                chatTable.scrollToBottom(animated: true)
+                // ...
+            }
+        }
+    }
+    
+    @objc func keyboardWillHide(notification:NSNotification){
+        if let userInfo = notification.userInfo {
+            if let keyboardSize = (userInfo[UIKeyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue {
+                self.removeCover()
+                //                self.view.frame.origin.y = 64
+                chatBottomConstraint.constant = 0
+                // ...
+            }
+        }
     }
     
 }
