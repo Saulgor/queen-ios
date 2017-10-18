@@ -55,6 +55,8 @@ class ChatTableView : UITableView ,UITableViewDataSource , UITableViewDelegate{
     var rootChatViewController:ChatViewController!
     var displayPhotos:NSArray = NSArray()
     
+    var current_user_id:NSNumber = 2
+    
     var data : NSMutableArray? {
         didSet {
             print("didSet is :\(data)")
@@ -100,9 +102,9 @@ class ChatTableView : UITableView ,UITableViewDataSource , UITableViewDelegate{
 
         if let d = data{
             let dc = d[indexPath.row] as! Message
-            let type = dc.message_type
+            let type = dc.type
             if type == "text" {
-                let role = indexPath.row%2 == 0 ? Role.Sender : Role.Receiver
+                let role = dc.sender_id == current_user_id ? Role.Sender : Role.Receiver
                 
                 let cell = tableView.dequeueReusableCell(withIdentifier: "MessageChatViewCell", for: indexPath) as! MessageChatViewCell
                 cell.message_type = type
@@ -182,7 +184,7 @@ class MessageChatViewCell: ChatViewCell {
 
             self.headerImgView.image = UIImage()
             self.bubbleImgView.image = data?.role == Role.Sender ? UIImage(named: "bubbleRGrey") : UIImage(named: "bubbleLWhite")
-            self.contentLbl.text = data?.message.content
+            self.contentLbl.text = data?.message.custom_content.text
             self.contentLbl.textColor = UIColor.black
             self.contentLbl.textAlignment = data?.role == Role.Sender ? NSTextAlignment.left : NSTextAlignment.left
 
@@ -267,7 +269,7 @@ class PhotoChatViewCell: ChatViewCell {
             self.contentImage.addSubview(self.contentImageButton)
             //            self.selectionStyle = .none
             //将data模型中的数据给头像、内容、气泡视图
-            self.contentView.isHidden = data!.message.isFromSocket
+//            self.contentView.isHidden = data!.message.isFromSocket
             
             self.headerImgView.image = UIImage()
             self.bubbleImgView.image = data?.role == Role.Sender ? UIImage(named: "bubbleRGrey") : UIImage(named: "bubbleLWhite")
@@ -462,7 +464,7 @@ class BlankChatViewCell: ChatViewCell {
             //将data模型中的数据给头像、内容、气泡视图
             
             self.headerImgView.image = UIImage()
-            if data?.message.message_type == "blank" {
+            if data?.message.type == "blank" {
                 self.bubbleImgView.image = UIImage()
                 self.contentLbl.textColor = UIColor.clear
             }else{
@@ -470,7 +472,7 @@ class BlankChatViewCell: ChatViewCell {
                 self.contentLbl.textColor = UIColor.black
             }
             
-            self.contentLbl.text = data?.message.content
+            self.contentLbl.text = data?.message.custom_content.text
             self.contentLbl.textAlignment = data?.role == Role.Sender ? NSTextAlignment.left : NSTextAlignment.left
             
             //2.设置约束
@@ -602,8 +604,8 @@ class ChatInputTool : UIView {
     func followInit(){
         self.addSubview(inputTool)
         self.addSubview(senderTool)
-        self.addSubview(imageTool)
-        vd = ["inputTool" : inputTool , "senderTool" : senderTool,"imageTool":imageTool]
+//        self.addSubview(imageTool)
+        vd = ["inputTool" : inputTool , "senderTool" : senderTool]
         self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "|-10-[inputTool]-10-[senderTool(60)]-10-|", options: [], metrics: nil, views: vd))
         self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat: "V:|-[inputTool]-|", options: [], metrics: nil, views: vd))
         self.addConstraints(NSLayoutConstraint.constraints(withVisualFormat:"V:|-[senderTool]-|", options: [], metrics: nil, views: vd))

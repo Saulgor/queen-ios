@@ -12,7 +12,7 @@ import SwiftyJSON
 
 typealias CommandResponseBlock =  (AFHTTPRequestOperation?, JSON?, NSError?) -> Void
 typealias BooleanResultBlock = (Bool, NSError?) -> Void
-typealias ChatMessagesResultBlock = (NSArray?, NSError?) -> Void
+typealias ChatMessagesResultBlock = (NSArray?, String , NSError?) -> Void
 typealias ChatMessageResultBlock = (Message?, NSError?) -> Void
 typealias ChatDetailResultBlock = (ChatDetail?, NSError?) -> Void
 typealias BufferResultBlock = (Int, NSError?) -> Void
@@ -28,6 +28,7 @@ let ERROR_PASSWORD_MISSING           = 103                       //  Int
 
 let HTTP_RESPONSE                    = "response"                //  String
 let HTTP_DATA                        = "data"                    //  String
+let HTTP_PAGE_SIZE                   = 20                        //  Int
 
 /* HttpMethod */
 let HTTPMETHOD_POST                  = "POST"                    //  String

@@ -19,37 +19,62 @@ enum MessageType{
 }
 
 class Message {
-    var message_id:NSNumber = 0
-    var message_type:String = ""
-    var content:String = ""
-    var attachment:String = ""
+    var _id:String = ""
+    var chat_id:NSNumber = 0
+    var sender_id:NSNumber = 0
+    var receiver_id:NSNumber = 0
+    var type:String = ""
     var created_at:NSDate = NSDate()
     var custom_content:CustomContent = CustomContent()
-    var isFromSocket = false
     
     init() {
         
     }
-    
-    init(message_type:String,content:String,attachment:String,isFromSocket:Bool) {
-        self.message_type = message_type
-        self.content = content
-        self.attachment = attachment
-        self.isFromSocket = isFromSocket
-    }
-    
-    static func postTextMessageWithBlock(chat_id:NSNumber,text:String,block:ChatMessageResultBlock){
-        Alamofire.request(TUASK_HOSTNAME + API_VERSION + "").responseJSON { response in
+        
+    static func postTextMessageWithBlock(chat_id:NSNumber,text:String,block:@escaping ChatMessageResultBlock){
+        let params: Parameters = [
+            "text": text
+        ]
+        Alamofire.request(TUASK_HOSTNAME + API_VERSION + "/chat/\(chat_id.intValue)/messages", method: .post, parameters: params).responseJSON { response in
             print("Request: \(String(describing: response.request))")   // original url request
             print("Response: \(String(describing: response.response))") // http url response
             print("Result: \(response.result)")                         // response serialization result
             
-            if let json = response.result.value {
-                print("JSON: \(json)") // serialized json response
+            switch response.result {
+            case .success:
+                if let jsonResponse = response.result.value {
+                    print(jsonResponse) // serialized json response
+                    let json = JSON(jsonResponse)
+                    block(ChatModelUtilities._fetchChatMessageFromResponse(json: json), nil)
+                }
+                
+            case .failure:
+                block(nil, nil)
             }
+        }
+    }
+    
+    
+    static func fetchChatMessagesWithBlock(chat_id:NSNumber, last_id:String, block:@escaping ChatMessagesResultBlock){
+        let params: Parameters = [
+            "last_id": last_id,
+            "page_size": HTTP_PAGE_SIZE
+        ]
+        Alamofire.request(TUASK_HOSTNAME + API_VERSION + "/chat/\(chat_id.intValue)/messages", method: .get, parameters: params).responseJSON { response in
+            print("Request: \(String(describing: response.request))")   // original url request
+            print("Response: \(String(describing: response.response))") // http url response
+            print("Result: \(response.result)")                         // response serialization result
             
-            if let data = response.data, let utf8Text = String(data: data, encoding: .utf8) {
-                print("Data: \(utf8Text)") // original server data as UTF8 string
+            switch response.result {
+            case .success:
+                if let jsonResponse = response.result.value {
+                    print(jsonResponse) // serialized json response
+                    let json = JSON(jsonResponse)
+                    block(ChatModelUtilities._fetchChatMessagesFromResponse(json: json), ChatModelUtilities._fetchChatMessagesLastIdFromResponse(json: json), nil)
+                }
+                
+            case .failure:
+                block(NSArray(), "", nil)
             }
         }
     }
@@ -60,55 +85,26 @@ class ChatDetail {
 }
 
 class CustomContent {
-    var type:String = ""
-}
-
-class ChatRESTCommand {
-    
-    ///--------------------------------------
-    /// @name Init
-    ///--------------------------------------
-//    static func _commandWithHTTPPath(path:String?, httpMethod:String?, header:NSDictionary?, parameters:NSDictionary?, data:NSData?, fileDataName:String?) -> ChatRESTCommand{
-//        let result = ChatRESTCommand()
-//        result.HTTPPath = path
-//        result.HTTPMethod = httpMethod
-//        result.header = header
-//        result.parameters = parameters
-//        result.multipartData = data
-//        result.fileDataName = fileDataName
-//        return result
-//    }
-//
-//    static func fetchChatMessagesCommand(chat_id:NSNumber,offset:Int) -> ChatRESTCommand {
-//        return self._commandWithHTTPPath(path: TUASK_HOSTNAME + API_VERSION_2 + "/chats/\(chat_id.intValue)/messages?page=1&offset=\(offset)", httpMethod: HTTPMETHOD_GET, header: nil, parameters: nil, data: nil, fileDataName: nil)
-//    }
-//
-//    static func fetchChatDetailCommand(chat_id:NSNumber) -> ChatRESTCommand {
-//        return self._commandWithHTTPPath(path: TUASK_HOSTNAME + API_VERSION_2 + "/chats/\(chat_id.intValue)", httpMethod: HTTPMETHOD_GET, header: nil, parameters: nil, data: nil, fileDataName: nil)
-//    }
-//
-//    static func postMessage(chat_id:NSNumber,text:String) -> ChatRESTCommand {
-//        let parameters = ["message[message_type]":"text","message[content]":text]
-//        return self._commandWithHTTPPath(path: TUASK_HOSTNAME + API_VERSION_2 + "/chats/\(chat_id.intValue)/send_message", httpMethod: HTTPMETHOD_POST, header: nil, parameters: parameters as NSDictionary, data: nil, fileDataName: nil)
-//    }
-//
-//    static func postMessage(chat_id:NSNumber,image:NSData) -> ChatRESTCommand {
-//        let parameters = ["message[message_type]":"image"]
-//        return self._commandWithHTTPPath(path: TUASK_HOSTNAME + API_VERSION_2 + "/chats/\(chat_id.intValue)/send_message", httpMethod: HTTPMETHOD_POST, header: nil, parameters: parameters as NSDictionary, data: image, fileDataName: "message[attachment]")
-//    }
-//
-//    static func cancelChat(chat_id:NSNumber) -> ChatRESTCommand {
-//        return self._commandWithHTTPPath(path: TUASK_HOSTNAME + API_VERSION_2 + "/chats/\(chat_id.intValue)/cancel", httpMethod: HTTPMETHOD_POST, header: nil, parameters: nil, data: nil, fileDataName: nil)
-//    }
+    var text:String = ""
+    var news:News?
 }
 
 class ChatModelUtilities {
+    static func _fetchChatMessagesLastIdFromResponse(json:JSON) -> String{
+        if json == JSON.null {
+            return ""
+        }
+        
+        let data = json[HTTP_DATA]["last_id"]["$oid"].stringValue
+        return data
+    }
+    
     static func _fetchChatMessagesFromResponse(json:JSON) -> NSArray{
-        if json == nil {
+        if json == JSON.null {
             return NSArray()
         }
         
-        let data = json[HTTP_RESPONSE]
+        let data = json[HTTP_DATA]["messages"]
         let messages = NSMutableArray()
         for object in data.arrayValue {
             messages.add(_fetchChatMessageFromJSON(object: object))
@@ -116,17 +112,17 @@ class ChatModelUtilities {
         return messages
     }
     
-    static func _fetchChatMessageFromResponse(data:JSON) -> Message{
-        if data == nil {
+    static func _fetchChatMessageFromResponse(json:JSON) -> Message{
+        if json == JSON.null {
             return Message()
         }
         
-        let object = data[HTTP_RESPONSE]
+        let object = json[HTTP_DATA]
         return _fetchChatMessageFromJSON(object: object)
     }
     
     static func _fetchChatDetailFromResponse(data:JSON) -> ChatDetail{
-        if data == nil {
+        if data == JSON.null {
             return ChatDetail()
         }
         
@@ -137,27 +133,34 @@ class ChatModelUtilities {
     }
     
     static func _fetchChatMessageFromJSON(object:JSON) -> Message{
-        if object == nil {
+        if object == JSON.null {
             return Message()
         }
         
         let message = Message()
-        message.message_id = object["id"].numberValue
-        message.message_type = object["message_type"].stringValue
-        message.content = object["content"].stringValue
-        message.attachment = object["attachment"].stringValue
+        message._id = object["_id"]["$oid"].stringValue
+        message.chat_id = object["chat_id"].numberValue
+        message.sender_id = object["sender_id"].numberValue
+        message.receiver_id = object["receiver_id"].numberValue
+        message.type = object["type"].stringValue
 //        message.created_at = NSDate.convertStringToDate(string: object["created_at"].stringValue)!
-        message.custom_content = _fetchChatMessageCustomContentFromJSON(object:object["custom_content"])
+        message.custom_content = _fetchChatMessageCustomContentFromJSON(object:object["content"], type: message.type)
         
         return message
     }
     
-    static func _fetchChatMessageCustomContentFromJSON(object:JSON) -> CustomContent{
-        if object == nil {
+    static func _fetchChatMessageCustomContentFromJSON(object:JSON, type:String) -> CustomContent{
+        if object == JSON.null {
             return CustomContent()
         }
         let content = CustomContent()
-        content.type = object["type"].stringValue
+        switch type {
+        case "text":
+            content.text = object["text"].stringValue
+        default:
+            break
+        }
+        
         return content
     }
 }

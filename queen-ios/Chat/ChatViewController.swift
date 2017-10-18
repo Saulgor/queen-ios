@@ -28,7 +28,9 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         }
     }
     
-    var chat_id:NSNumber?
+    var chat_id:NSNumber = 1
+    var last_id = ""
+    
     var _webSocket:SRWebSocket?
     
     var cover:UIButton!
@@ -69,20 +71,20 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = UIColor.ChatBackgroundColor()
-        
+
         self.refreshControl = UIRefreshControl()
         self.refreshControl!.layer.zPosition = -50
         self.chatTable.addSubview(refreshControl!)
         self.refreshControl?.addTarget(self, action: #selector(ChatViewController.onPullToFresh), for: UIControlEvents.valueChanged)
-        
-        
+
+
         cover = UIButton(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.height))
         cover.backgroundColor = UIColor.clear
         cover.isHidden = true
         self.view.addSubview(cover!)
         self.view.bringSubview(toFront: cover)
         cover.addTarget(self, action: #selector(ChatViewController.onCoverTouched), for: .touchUpInside)
-        
+
         followInit()
     }
     
@@ -144,6 +146,33 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
 //        createSenderButtons()
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        self.reconnect()
+
+        let delegate = UIApplication.shared.delegate as! AppDelegate
+        delegate.isInChatRoom = true
+
+        self.fetchChatMessages()
+        
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardDidShow, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillHide, object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillShow, object: nil)
+        
+        let delegate = UIApplication.shared.delegate as! AppDelegate
+        delegate.isInChatRoom = false
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        _webSocket?.close()
+        _webSocket = nil
+    }
+    
     func createSenderButtons() {
         width1 = testString1.widthWithConstrainedHeight(35, font: UIFont.boldSystemFont(ofSize: 15)) + 40
         width2 = testString2.widthWithConstrainedHeight(35, font: UIFont.boldSystemFont(ofSize: 15)) + 40
@@ -185,9 +214,9 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
             self.button1.alpha = 0
         }) { (succeed) in
             self.chatTable.data?.removeLastObject()
-            self.chatTable.data?.add(Message(message_type: "text", content: self.testString1, attachment: "",isFromSocket: false))
-            let cell:BlankChatViewCell = self.chatTable.cellForRow(at: IndexPath(row: self.chatTable.data!.count-1, section: 0)) as! BlankChatViewCell
-            cell.data = ChatViewData(message:Message(message_type: "text", content: self.testString1, attachment: "",isFromSocket: false) , role: .Sender)
+//            self.chatTable.data?.add(Message(message_type: "text", content: self.testString1, attachment: "",isFromSocket: false))
+//            let cell:BlankChatViewCell = self.chatTable.cellForRow(at: IndexPath(row: self.chatTable.data!.count-1, section: 0)) as! BlankChatViewCell
+//            cell.data = ChatViewData(message:Message(message_type: "text", content: self.testString1, attachment: "",isFromSocket: false) , role: .Sender)
         }
     }
     
@@ -207,9 +236,9 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
             self.button2.alpha = 0
         }) { (succeed) in
             self.chatTable.data?.removeLastObject()
-            self.chatTable.data?.add(Message(message_type: "text", content: self.testString2, attachment: "",isFromSocket: false))
-            let cell:BlankChatViewCell = self.chatTable.cellForRow(at: IndexPath(row: self.chatTable.data!.count-1, section: 0)) as! BlankChatViewCell
-            cell.data = ChatViewData(message:Message(message_type: "text", content: self.testString2, attachment: "",isFromSocket: false) , role: .Sender)
+//            self.chatTable.data?.add(Message(message_type: "text", content: self.testString2, attachment: "",isFromSocket: false))
+//            let cell:BlankChatViewCell = self.chatTable.cellForRow(at: IndexPath(row: self.chatTable.data!.count-1, section: 0)) as! BlankChatViewCell
+//            cell.data = ChatViewData(message:Message(message_type: "text", content: self.testString2, attachment: "",isFromSocket: false) , role: .Sender)
         }
     }
     
@@ -224,69 +253,44 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     }
     
     @objc func fetchChatMessages() {
-        let array = NSMutableArray()
-        array.add(Message(message_type: "text", content: "An eclectic mix of Lovestruck and Datetix members", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "Hosted at Magnum", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "Complimentary drink included in the ticket price", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "Complimentary drink included in the ticket price", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "Complimentary drink included in the ticket price", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "Complimentary drink included in the ticket price", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "Live DJ", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
-        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
-        self.chatTable.data = array
-        Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
-        //        Message.fetchChatMessagesWithBlock(chat_id,offset: 0) { (messages, error) in
-//            if error == nil{
-//                self.chatTable.data = NSMutableArray(array: messages)
-//                self.chatTable.scrollToBottom(false)
-//            }
-//        }
+//        let array = NSMutableArray()
+//        array.add(Message(message_type: "text", content: "An eclectic mix of Lovestruck and Datetix members", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "Hosted at Magnum", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "Complimentary drink included in the ticket price", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "Complimentary drink included in the ticket price", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "Complimentary drink included in the ticket price", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "Complimentary drink included in the ticket price", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "Live DJ", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
+//        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
+//        self.chatTable.data = array
+//        Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
+        Message.fetchChatMessagesWithBlock(chat_id: chat_id, last_id: "") { (messages, last_id, error) in
+            if error == nil{
+                self.last_id = last_id
+                self.chatTable.data = NSMutableArray(array: messages!)
+                self.chatTable.scrollToBottom(animated: false)
+            }
+        }
     }
     
     func fetchMoreChatMessages(offset:Int) {
-//        Message.fetchChatMessagesWithBlock(chat_id,offset: offset) { (messages, error) in
-//            if error == nil{
-//                if let realDatasource:NSMutableArray = NSMutableArray(array: messages) {
-//                    let tempDatasource:NSMutableArray = NSMutableArray(array: self.chatTable.data!)
-//                    realDatasource.addObjectsFromArray(tempDatasource as [AnyObject])
-//                    self.chatTable.data = realDatasource
-//                    self.chatTable.scrollToRowAtIndexPath(NSIndexPath(forRow: messages.count, inSection: 0), atScrollPosition: .Top, animated: false)
-//                }
-//            }
-//            self.refreshing = false
-//        }
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        self.reconnect()
-        
-        let delegate = UIApplication.shared.delegate as! AppDelegate
-        delegate.isInChatRoom = true
-        
-        self.fetchChatMessages()
-
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardDidShow, object: nil)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillHide, object: nil)
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.UIKeyboardWillShow, object: nil)
-        
-        let delegate = UIApplication.shared.delegate as! AppDelegate
-        delegate.isInChatRoom = false
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        _webSocket?.close()
-        _webSocket = nil
+        Message.fetchChatMessagesWithBlock(chat_id:chat_id, last_id: self.last_id) { (messages, last_id, error) in
+            if error == nil{
+                if let realDatasource:NSMutableArray = NSMutableArray(array: messages!) {
+                    let tempDatasource:NSMutableArray = NSMutableArray(array: self.chatTable.data!)
+                    realDatasource.addObjects(from: tempDatasource as [AnyObject])
+                    self.last_id = last_id
+                    self.chatTable.data = realDatasource
+                    self.chatTable.scrollToRow(at: IndexPath(row: messages!.count, section:0), at: .top, animated: false)
+                }
+            }
+            self.refreshing = false
+        }
     }
     
     //Socket Handling
@@ -334,7 +338,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
                     if self.chatTable.data != nil {
                         for data in self.chatTable.data! {
                             if let message = data as? Message{
-                                if message.message_id == result.message_id {
+                                if message._id == result._id {
                                     isDuplicate = true
                                 }
                             }
@@ -365,7 +369,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     }
     
     func addLoading() {
-        self.chatTable.data?.add(Message(message_type: "indicator", content: "", attachment: "",isFromSocket: true))
+//        self.chatTable.data?.add(Message(message_type: "indicator", content: "", attachment: "",isFromSocket: true))
         self.chatTable.reloadData()
         Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
     }
@@ -377,7 +381,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     }
     
     func addBlank(content:String) {
-        self.chatTable.data?.add(Message(message_type: "blank", content: content, attachment: "",isFromSocket: true))
+//        self.chatTable.data?.add(Message(message_type: "blank", content: content, attachment: "",isFromSocket: true))
         self.chatTable.reloadData()
         Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
     }
@@ -448,8 +452,11 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     
     func renderTableView(){
         if let txt = chatTool.inputTool.text {
-            Message.postTextMessageWithBlock(chat_id: chat_id!, text: txt, block: { (message, error) in
+            Message.postTextMessageWithBlock(chat_id: chat_id, text: txt, block: { (message, error) in
                 self.chatTool.inputTool.text = ""
+                self.chatTable.data?.add(message)
+                self.chatTable.reloadData()
+                Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
             })
             
         }
