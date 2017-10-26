@@ -28,6 +28,7 @@
 		CEF2C0F71F93CF79000AB05D /* Member.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2C0F61F93CF79000AB05D /* Member.swift */; };
 		CEF2C0F91F93CFB0000AB05D /* Base.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2C0F81F93CFB0000AB05D /* Base.swift */; };
 		CEF2C0FB1F93D123000AB05D /* News.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2C0FA1F93D123000AB05D /* News.swift */; };
+		CEF2C0FD1F98F3CC000AB05D /* SocketIOManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2C0FC1F98F3CC000AB05D /* SocketIOManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -113,6 +114,7 @@
 		CEF2C0F61F93CF79000AB05D /* Member.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Member.swift; sourceTree = "<group>"; };
 		CEF2C0F81F93CFB0000AB05D /* Base.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Base.swift; sourceTree = "<group>"; };
 		CEF2C0FA1F93D123000AB05D /* News.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = News.swift; sourceTree = "<group>"; };
+		CEF2C0FC1F98F3CC000AB05D /* SocketIOManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocketIOManager.swift; sourceTree = "<group>"; };
 		F65003F4DC4EC4F9FC689B9E /* Pods-queen-iosTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-queen-iosTests.release.xcconfig"; path = "Pods/Target Support Files/Pods-queen-iosTests/Pods-queen-iosTests.release.xcconfig"; sourceTree = "<group>"; };
 		F7A3BC03E8FE0279E7AA22DC /* Pods_queen_iosUITests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_queen_iosUITests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -174,6 +176,7 @@
 				CE0556311F7D51E80075DD8A /* Chat.swift */,
 				CE0556331F7D51E80075DD8A /* ChatViewController.swift */,
 				CE0556321F7D51E80075DD8A /* TableView+Chat.swift */,
+				CEF2C0FC1F98F3CC000AB05D /* SocketIOManager.swift */,
 			);
 			path = Chat;
 			sourceTree = "<group>";
@@ -570,14 +573,18 @@
 				"${SRCROOT}/Pods/Target Support Files/Pods-queen-ios/Pods-queen-ios-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/Alamofire/Alamofire.framework",
 				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
+				"${BUILT_PRODUCTS_DIR}/Socket.IO-Client-Swift/SocketIO.framework",
 				"${BUILT_PRODUCTS_DIR}/SocketRocket/SocketRocket.framework",
+				"${BUILT_PRODUCTS_DIR}/StarscreamSocketIO/StarscreamSocketIO.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftyJSON/SwiftyJSON.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Alamofire.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SocketIO.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SocketRocket.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/StarscreamSocketIO.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyJSON.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -632,6 +639,7 @@
 				CE0556631F7D59BE0075DD8A /* DotsLoader.swift in Sources */,
 				CE0556621F7D59B80075DD8A /* SettingsTable.swift in Sources */,
 				CE05565E1F7D59AA0075DD8A /* ChatViewController.swift in Sources */,
+				CEF2C0FD1F98F3CC000AB05D /* SocketIOManager.swift in Sources */,
 				CEF2C0F71F93CF79000AB05D /* Member.swift in Sources */,
 				CEF2C0FB1F93D123000AB05D /* News.swift in Sources */,
 				CE0556351F7D520C0075DD8A /* Constants.swift in Sources */,

@@ -8,7 +8,8 @@ target 'queen-ios' do
   pod 'SwiftyJSON'
   pod 'SocketRocket'
   pod 'Alamofire', '~> 4.5'
-  
+  pod 'Socket.IO-Client-Swift'
+
 
   # Pods for queen-ios
 

@@ -51,5 +51,8 @@ let HTTP_HEADER_CLIENT               = "Client"                  //  String
 let API_VERSION                      = "/api/v1"                 //  String
 let API_VERSION_2                    = "/api/v2"                 //  String
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-let TUASK_HOSTNAME = "https://sleepy-meadow-29135.herokuapp.com"
+//let TUASK_HOSTNAME = "https://sleepy-meadow-29135.herokuapp.com"
+let TUASK_HOSTNAME = "http://localhost:5000"
+
+let QueenAIID = "saulgorr@gmail.com"
 

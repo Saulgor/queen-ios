@@ -9,6 +9,7 @@
 import UIKit
 import SocketRocket
 import SwiftyJSON
+import SocketIO
 
 class ChatViewController: ViewController , UITextFieldDelegate,UINavigationControllerDelegate,UIImagePickerControllerDelegate,SRWebSocketDelegate, UIScrollViewDelegate{
     @IBOutlet weak var scrollView: UIScrollView!
@@ -16,6 +17,9 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     @IBOutlet weak var scrollViewContainer2: UIView!
     @IBOutlet weak var scrollViewContainer3: UIView!
     
+    
+    var socket: SocketIOClient = SocketIOClient(socketURL: URL(string: TUASK_HOSTNAME)!, config: [.nsp("/chat")])
+
     var refreshControl: UIRefreshControl?
     var refreshing: Bool = false {
         didSet {
@@ -28,10 +32,9 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         }
     }
     
-    var chat_id:NSNumber = 1
     var last_id = ""
+    var user_id = "queen@test.com"
     
-    var _webSocket:SRWebSocket?
     
     var cover:UIButton!
     
@@ -53,6 +56,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
             chatTool.inputTool.delegate = self
             chatTool.translatesAutoresizingMaskIntoConstraints = false
             chatTool.backgroundColor = UIColor.white
+            chatTool.senderTool.addTarget(self, action: #selector(ChatViewController.send(sender:)), for: .touchUpInside)
         }
     }
     @IBOutlet weak var chatBottomConstraint: NSLayoutConstraint!
@@ -66,7 +70,6 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     var button1:UIButton!
     var button2:UIButton!
     
-//    @IBOutlet weak var footerContrainer: UIView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -99,8 +102,56 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardDidShow(notification:)), name: NSNotification.Name.UIKeyboardDidShow, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
-//        NotificationCenter.default.addObserver(self, selector: #selector(ChatViewController.fetchChatMessages), name: NSNotification.Name(rawValue: "ApplicationWillEnterForegroundFetchMessages"), object: nil)
+        
+        
+        socket.on(clientEvent: .connect) {data, ack in
+            print("socket connected")
+            self.socket.emit("register", ["user": self.user_id])
+        }
+        
+        
+        socket.on(clientEvent: .error) {data, ack in
+            print("socket error")
+        }
+        
+        socket.on(clientEvent: .disconnect) {data, ack in
+            print("socket disconnect")
+            
+        }
+        
+        socket.on(clientEvent: .reconnect) {data, ack in
+            print("socket reconnect")
+        }
+        
+        socket.on(clientEvent: .reconnectAttempt) {data, ack in
+            print("socket reconnectAttempt")
+        }
+        
+        socket.on(clientEvent: .statusChange) {data, ack in
+            print("socket statusChange")
+        }
+        
+        socket.on("message_response") {data, ack in
+            let json_response:JSON = JSON(data)
+            print(json_response)
+            let message = ChatModelUtilities._fetchChatMessageFromSocketJSON(object: json_response)
+            if message != nil {
+                self.chatTable.data?.add(message)
+                self.chatTable.reloadData()
+                Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
+                if message!.custom_content.text.characters.count > 0 {
+                    Message.postTextMessageWithBlock(chat_id: QueenAIID + "-" + self.user_id, user_id: self.user_id, text: message!.custom_content.text, block: { (ai_message, error) in
+                        if ai_message != nil {
+                            self.chatTable.data?.add(ai_message)
+                            self.chatTable.reloadData()
+                            Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
+                        }
+                    })
+                }
+            }
+        }
     }
+    
     
     @objc func respondToSwipeGesture(gesture: UIGestureRecognizer) {
         
@@ -143,13 +194,13 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-//        createSenderButtons()
+        
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        self.reconnect()
-
+        socket.connect()
+        
         let delegate = UIApplication.shared.delegate as! AppDelegate
         delegate.isInChatRoom = true
 
@@ -169,8 +220,6 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        _webSocket?.close()
-        _webSocket = nil
     }
     
     func createSenderButtons() {
@@ -269,7 +318,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
 //        array.add(Message(message_type: "text", content: "A spooky 666 lucky draw", attachment: "",isFromSocket: false))
 //        self.chatTable.data = array
 //        Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
-        Message.fetchChatMessagesWithBlock(chat_id: chat_id, last_id: "") { (messages, last_id, error) in
+        Message.fetchChatMessagesWithBlock(chat_id: QueenAIID + "-" + user_id, last_id: "") { (messages, last_id, error) in
             if error == nil{
                 self.last_id = last_id
                 self.chatTable.data = NSMutableArray(array: messages!)
@@ -279,7 +328,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     }
     
     func fetchMoreChatMessages(offset:Int) {
-        Message.fetchChatMessagesWithBlock(chat_id:chat_id, last_id: self.last_id) { (messages, last_id, error) in
+        Message.fetchChatMessagesWithBlock(chat_id:QueenAIID + "-" + user_id, last_id: self.last_id) { (messages, last_id, error) in
             if error == nil{
                 if let realDatasource:NSMutableArray = NSMutableArray(array: messages!) {
                     let tempDatasource:NSMutableArray = NSMutableArray(array: self.chatTable.data!)
@@ -293,36 +342,6 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         }
     }
     
-    //Socket Handling
-    func reconnect() {
-        _webSocket?.delegate = nil;
-        _webSocket?.close();
-        
-//        _webSocket = SRWebSocket(URL: NSURL(string: "ws://lazy-staging.herokuapp.com/cable"))
-//        _webSocket!.delegate = self;
-//        _webSocket!.open()
-    }
-    
-    func webSocketDidOpen(webSocket: SRWebSocket!) {
-        print("Websocket Connected")
-//        let strChannel = String(format: "{ \"channel\": \"MessagesChannel\", \"chat_id\": \(chat_id.integerValue)}")
-//        let parameters = ["command":"subscribe","identifier":strChannel]
-//        
-//        
-//        do {
-//            let jsonData = try NSJSONSerialization.dataWithJSONObject(parameters, options: NSJSONWritingOptions.PrettyPrinted)
-//            // here "jsonData" is the dictionary encoded in JSON data
-//            let datastring = NSString(data: jsonData, encoding: NSUTF8StringEncoding)
-//            _webSocket!.send(datastring)
-//        } catch let error as NSError {
-//            print(error)
-//        }
-    }
-    
-    func webSocket(webSocket: SRWebSocket!, didFailWithError error: NSError!) {
-        print(":( Websocket Failed With Error")
-        print(error)
-    }
     
     func webSocket(_ webSocket: SRWebSocket!, didReceiveMessage message: Any!) {
         print(message)
@@ -425,16 +444,6 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         return nil
     }
     
-    func webSocket(webSocket: SRWebSocket!, didCloseWithCode code: Int, reason: String!, wasClean: Bool) {
-        print("WebSocket closed")
-    }
-    
-    func webSocket(webSocket: SRWebSocket!, didReceivePong pongPayload: NSData!) {
-        print("WebSocket received pong")
-    }
-    
-    //
-    
     
     @objc func onCoverTouched(){
         self.view.endEditing(true)
@@ -449,18 +458,18 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         cover.isHidden = true
     }
     
+    @objc func send(sender: UIButton) {
+        if let txt = chatTool.inputTool.text {
+            self.socket.emit("private_send", ["friend": QueenAIID, "text": txt])
+            
+        }
+    }
     
     func renderTableView(){
         if let txt = chatTool.inputTool.text {
-            Message.postTextMessageWithBlock(chat_id: chat_id, text: txt, block: { (message, error) in
-                self.chatTool.inputTool.text = ""
-                self.chatTable.data?.add(message)
-                self.chatTable.reloadData()
-                Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
-            })
+            self.socket.emit("private_send", ["friend": QueenAIID, "text": txt])
             
         }
-        
     }
     
     func renderImageTableView(){

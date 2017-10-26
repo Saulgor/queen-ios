@@ -21,8 +21,8 @@ enum MessageType{
 class Message {
     var _id:String = ""
     var chat_id:NSNumber = 0
-    var sender_id:NSNumber = 0
-    var receiver_id:NSNumber = 0
+    var sender_id:String = ""
+    var receiver_id:String = ""
     var type:String = ""
     var created_at:NSDate = NSDate()
     var custom_content:CustomContent = CustomContent()
@@ -30,12 +30,22 @@ class Message {
     init() {
         
     }
-        
-    static func postTextMessageWithBlock(chat_id:NSNumber,text:String,block:@escaping ChatMessageResultBlock){
+    
+    init(_id:String, chat_id:NSNumber, sender_id:String, receiver_id:String, type:String) {
+        self._id = _id;
+        self.chat_id = chat_id;
+        self.sender_id = sender_id;
+        self.receiver_id = receiver_id;
+        self.type = type;
+    }
+    
+    static func postTextMessageWithBlock(chat_id:String, user_id:String, text:String,block:@escaping ChatMessageResultBlock){
         let params: Parameters = [
-            "text": text
+            "text": text,
+            "chat_id": chat_id,
+            "user_id": user_id
         ]
-        Alamofire.request(TUASK_HOSTNAME + API_VERSION + "/chat/\(chat_id.intValue)/messages", method: .post, parameters: params).responseJSON { response in
+        Alamofire.request(TUASK_HOSTNAME + API_VERSION + "/messages", method: .post, parameters: params).responseJSON { response in
             print("Request: \(String(describing: response.request))")   // original url request
             print("Response: \(String(describing: response.response))") // http url response
             print("Result: \(response.result)")                         // response serialization result
@@ -55,12 +65,13 @@ class Message {
     }
     
     
-    static func fetchChatMessagesWithBlock(chat_id:NSNumber, last_id:String, block:@escaping ChatMessagesResultBlock){
+    static func fetchChatMessagesWithBlock(chat_id:String, last_id:String, block:@escaping ChatMessagesResultBlock){
         let params: Parameters = [
             "last_id": last_id,
-            "page_size": HTTP_PAGE_SIZE
+            "page_size": HTTP_PAGE_SIZE,
+            "chat_id": chat_id
         ]
-        Alamofire.request(TUASK_HOSTNAME + API_VERSION + "/chat/\(chat_id.intValue)/messages", method: .get, parameters: params).responseJSON { response in
+        Alamofire.request(TUASK_HOSTNAME + API_VERSION + "/messages", method: .get, parameters: params).responseJSON { response in
             print("Request: \(String(describing: response.request))")   // original url request
             print("Response: \(String(describing: response.response))") // http url response
             print("Result: \(response.result)")                         // response serialization result
@@ -140,11 +151,43 @@ class ChatModelUtilities {
         let message = Message()
         message._id = object["_id"]["$oid"].stringValue
         message.chat_id = object["chat_id"].numberValue
-        message.sender_id = object["sender_id"].numberValue
-        message.receiver_id = object["receiver_id"].numberValue
+        message.sender_id = object["sender_id"].stringValue
+        message.receiver_id = object["receiver_id"].stringValue
         message.type = object["type"].stringValue
 //        message.created_at = NSDate.convertStringToDate(string: object["created_at"].stringValue)!
         message.custom_content = _fetchChatMessageCustomContentFromJSON(object:object["content"], type: message.type)
+        
+        return message
+    }
+    
+    
+    static func _fetchChatMessageFromSocketJSON(object:JSON) -> Message?{
+        if object == JSON.null {
+            return Message()
+        }
+        var message:Message?
+        let type = object.arrayValue[0]["type"].stringValue
+        let act = object.arrayValue[0]["act"].stringValue
+        switch type {
+        case "private_message":
+            if act == "pm" {
+                let text = object.arrayValue[0]["data"]["text"].stringValue
+                let from = object.arrayValue[0]["data"]["from"].stringValue
+                let to = object.arrayValue[0]["data"]["to"].stringValue
+                message = Message(_id: "", chat_id: 0, sender_id: from, receiver_id: to, type: "text")
+                message!.custom_content.text = text
+            }
+        case "private_message_success":
+            if act == "pm" {
+                let text = object.arrayValue[0]["data"]["text"].stringValue
+                let from = object.arrayValue[0]["data"]["from"].stringValue
+                let to = object.arrayValue[0]["data"]["to"].stringValue
+                message = Message(_id: "", chat_id: 0, sender_id: from, receiver_id: to, type: "text")
+                message!.custom_content.text = text
+            }
+        default:
+            break
+        }
         
         return message
     }
@@ -157,6 +200,19 @@ class ChatModelUtilities {
         switch type {
         case "text":
             content.text = object["text"].stringValue
+            break
+        case "news":
+            let news = News()
+            news.title = object["news"]["title"].stringValue
+            news.url = object["news"]["url"].stringValue
+            news.detail = object["news"]["detail"].stringValue
+            news.source = object["news"]["source"].stringValue
+            news.created_at = object["news"]["created_at"].stringValue
+            news.website = object["news"]["website"].stringValue
+            content.news = news
+            break
+        case "stock":
+            break
         default:
             break
         }

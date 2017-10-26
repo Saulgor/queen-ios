@@ -14,4 +14,5 @@ class News: Base {
     var detail:String = ""
     var source:String = ""
     var created_at:String = ""
+    var website:String = ""
 }
