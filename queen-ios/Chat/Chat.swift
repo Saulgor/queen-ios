@@ -97,7 +97,7 @@ class ChatDetail {
 
 class CustomContent {
     var text:String = ""
-    var news:News?
+    var news:NSArray?
 }
 
 class ChatModelUtilities {
@@ -202,14 +202,18 @@ class ChatModelUtilities {
             content.text = object["text"].stringValue
             break
         case "news":
-            let news = News()
-            news.title = object["news"]["title"].stringValue
-            news.url = object["news"]["url"].stringValue
-            news.detail = object["news"]["detail"].stringValue
-            news.source = object["news"]["source"].stringValue
-            news.created_at = object["news"]["created_at"].stringValue
-            news.website = object["news"]["website"].stringValue
-            content.news = news
+            let newsArray = NSMutableArray()
+            for item in object["news"].arrayValue {
+                let news = News()
+                news.title = item["title"].stringValue
+                news.url = item["url"].stringValue
+                news.detail = item["detail"].stringValue
+                news.source = item["source"].stringValue
+                news.created_at = item["created_at"].stringValue
+                news.website = item["website"].stringValue
+                newsArray.add(news)
+            }
+            content.news = newsArray
             break
         case "stock":
             break

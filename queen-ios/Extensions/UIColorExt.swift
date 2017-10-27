@@ -36,4 +36,15 @@ public extension UIColor {
     public class func lightQueenColor() -> UIColor {
         return UIColor.RGBColor(red: 124, green: 35, blue: 201)
     }
+    
+    public class func newsGrayTextColor() -> UIColor {
+        return UIColor.RGBColor(red: 120, green: 120, blue: 120)
+    }
+    public class func newsContentBackgroundColor() -> UIColor {
+        return UIColor.RGBColor(red: 235, green: 235, blue: 235)
+    }
+    
+    public class func yahooColor() -> UIColor {
+        return UIColor.RGBColor(red: 114, green: 14, blue: 158)
+    }
 }
