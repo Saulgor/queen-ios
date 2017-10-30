@@ -12,9 +12,10 @@ import SwiftyJSON
 
 typealias CommandResponseBlock =  (AFHTTPRequestOperation?, JSON?, NSError?) -> Void
 typealias BooleanResultBlock = (Bool, NSError?) -> Void
-typealias ChatMessagesResultBlock = (NSArray?, String , NSError?) -> Void
+typealias ChatMessagesResultBlock = ([Message]?, String , NSError?) -> Void
 typealias ChatMessageResultBlock = (Message?, NSError?) -> Void
 typealias ChatDetailResultBlock = (ChatDetail?, NSError?) -> Void
+typealias MemberResultBlock = (Member?, NSError?) -> Void
 typealias BufferResultBlock = (Int, NSError?) -> Void
 
 /* Error */
@@ -51,8 +52,18 @@ let HTTP_HEADER_CLIENT               = "Client"                  //  String
 let API_VERSION                      = "/api/v1"                 //  String
 let API_VERSION_2                    = "/api/v2"                 //  String
 //-------------------------------------------------------------------------------------------------------------------------------------------------
-//let TUASK_HOSTNAME = "https://sleepy-meadow-29135.herokuapp.com"
-let TUASK_HOSTNAME = "http://localhost:5000"
+#if (arch(i386) || arch(x86_64)) && os(iOS)
+    let TUASK_HOSTNAME = "http://localhost:3000"
+#else
+    let TUASK_HOSTNAME = "https://sleepy-meadow-29135.herokuapp.com"
+#endif
+
+#if (arch(i386) || arch(x86_64)) && os(iOS)
+    let TUASK_SOCKET_HOSTNAME = "http://localhost:5000"
+#else
+    let TUASK_SOCKET_HOSTNAME = "https://sleepy-meadow-29135.herokuapp.com"
+#endif
+
 
 let QueenAIID = "saulgorr@gmail.com"
 

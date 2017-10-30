@@ -15,10 +15,9 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var scrollViewContainer1: UIView!
     @IBOutlet weak var scrollViewContainer2: UIView!
-    @IBOutlet weak var scrollViewContainer3: UIView!
     
     
-    var socket: SocketIOClient = SocketIOClient(socketURL: URL(string: TUASK_HOSTNAME)!, config: [.nsp("/chat")])
+    var socket: SocketIOClient = SocketIOClient(socketURL: URL(string: TUASK_SOCKET_HOSTNAME)!, config: [.nsp("/chat")])
 
     var refreshControl: UIRefreshControl?
     var refreshing: Bool = false {
@@ -35,15 +34,15 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     var last_id = ""
     var user_id = "queen@test.com"
     
-    
-    var cover:UIButton!
+    @IBOutlet weak var cover: UIButton!
+    @IBOutlet weak var avatorButton: UIButton!
     
     
     @IBOutlet weak var chatTable: ChatTableView! {
         didSet{
             chatTable.translatesAutoresizingMaskIntoConstraints = false
             chatTable.separatorStyle = .none
-            chatTable.backgroundColor = UIColor.ChatBackgroundColor()
+            chatTable.backgroundColor = UIColor.clear
             chatTable.estimatedRowHeight = 50
             chatTable.rowHeight = UITableViewAutomaticDimension
             chatTable.rootChatViewController = self
@@ -81,12 +80,13 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         self.refreshControl?.addTarget(self, action: #selector(ChatViewController.onPullToFresh), for: UIControlEvents.valueChanged)
 
 
-        cover = UIButton(frame: CGRect(x: 0, y: 0, width: self.view.frame.width, height: self.view.frame.height))
         cover.backgroundColor = UIColor.clear
         cover.isHidden = true
-        self.view.addSubview(cover!)
-        self.view.bringSubview(toFront: cover)
         cover.addTarget(self, action: #selector(ChatViewController.onCoverTouched), for: .touchUpInside)
+
+        avatorButton.layer.cornerRadius = 20
+        avatorButton.layer.masksToBounds = true
+        avatorButton.addTarget(self, action: #selector(ChatViewController.settings), for: .touchUpInside)
 
         followInit()
     }
@@ -136,13 +136,13 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
             print(json_response)
             let message = ChatModelUtilities._fetchChatMessageFromSocketJSON(object: json_response)
             if message != nil {
-                self.chatTable.data?.add(message)
+                self.chatTable.data?.append(message!)
                 self.chatTable.reloadData()
                 Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
                 if message!.custom_content.text.characters.count > 0 {
-                    Message.postTextMessageWithBlock(chat_id: QueenAIID + "-" + self.user_id, user_id: self.user_id, text: message!.custom_content.text, block: { (ai_message, error) in
+                    Message.postTextMessageWithBlock(chat_id: QueenAIID + "-" + self.user_id, user_id: self.user_id, text: message!.custom_content.text, is_sender: 0, block: { (ai_message, error) in
                         if ai_message != nil {
-                            self.chatTable.data?.add(ai_message)
+                            self.chatTable.data?.append(ai_message!)
                             self.chatTable.reloadData()
                             Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
                         }
@@ -176,20 +176,19 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     
     func scrollToLeft(){
         if scrollView.contentOffset.x == 0 {
-        }else if scrollView.contentOffset.x == scrollView.contentSize.width/3 {
+        }else if scrollView.contentOffset.x == scrollView.contentSize.width/2 {
             scrollView.setContentOffset(CGPoint(x: 0,y: 0), animated: true)
-        }else if scrollView.contentOffset.x == scrollView.contentSize.width*2/3{
-            scrollView.setContentOffset(CGPoint(x: scrollView.contentSize.width/3,y: 0), animated: true)
         }
     }
     
     func scrollToRight(){
         if scrollView.contentOffset.x == 0 {
-            scrollView.setContentOffset(CGPoint(x: scrollView.contentSize.width/3,y: 0), animated: true)
-        }else if scrollView.contentOffset.x == scrollView.contentSize.width/3 {
-            scrollView.setContentOffset(CGPoint(x: scrollView.contentSize.width*2/3,y: 0), animated: true)
-        }else if scrollView.contentOffset.x == scrollView.contentSize.width*2/3{
+            scrollView.setContentOffset(CGPoint(x: scrollView.contentSize.width/2,y: 0), animated: true)
         }
+    }
+    
+    @objc func settings() {
+        self.scrollToRight()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -204,6 +203,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         let delegate = UIApplication.shared.delegate as! AppDelegate
         delegate.isInChatRoom = true
 
+        self.fetchMember()
         self.fetchChatMessages()
         
     }
@@ -262,7 +262,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
             self.button1.frame = CGRect(x:self.chatTool.frame.width - self.width1 - 13, y: -(self.view.frame.height - self.chatTool.frame.height - height - 30), width: self.width1, height:35)
             self.button1.alpha = 0
         }) { (succeed) in
-            self.chatTable.data?.removeLastObject()
+            self.chatTable.data?.removeLast()
 //            self.chatTable.data?.add(Message(message_type: "text", content: self.testString1, attachment: "",isFromSocket: false))
 //            let cell:BlankChatViewCell = self.chatTable.cellForRow(at: IndexPath(row: self.chatTable.data!.count-1, section: 0)) as! BlankChatViewCell
 //            cell.data = ChatViewData(message:Message(message_type: "text", content: self.testString1, attachment: "",isFromSocket: false) , role: .Sender)
@@ -284,7 +284,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
             self.button2.frame = CGRect(x:self.chatTool.frame.width - self.width2 - 13, y: -(self.view.frame.height - self.chatTool.frame.height - height - 30), width:self.width2, height:35)
             self.button2.alpha = 0
         }) { (succeed) in
-            self.chatTable.data?.removeLastObject()
+            self.chatTable.data?.removeLast()
 //            self.chatTable.data?.add(Message(message_type: "text", content: self.testString2, attachment: "",isFromSocket: false))
 //            let cell:BlankChatViewCell = self.chatTable.cellForRow(at: IndexPath(row: self.chatTable.data!.count-1, section: 0)) as! BlankChatViewCell
 //            cell.data = ChatViewData(message:Message(message_type: "text", content: self.testString2, attachment: "",isFromSocket: false) , role: .Sender)
@@ -299,6 +299,15 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
             fetchChatMessages()
         }
         
+    }
+    
+    func fetchMember() {
+        Member.fetchMemberWithBlock(uid: user_id) { (member, error) in
+            if error == nil {
+                self.avatorButton.sd_setBackgroundImage(with: URL(string: member!.avator), for: .normal, completed: nil)
+                
+            }
+        }
     }
     
     @objc func fetchChatMessages() {
@@ -321,22 +330,23 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         Message.fetchChatMessagesWithBlock(chat_id: QueenAIID + "-" + user_id, last_id: "") { (messages, last_id, error) in
             if error == nil{
                 self.last_id = last_id
-                self.chatTable.data = NSMutableArray(array: messages!)
+                self.chatTable.data = messages!
                 self.chatTable.scrollToBottom(animated: false)
             }
         }
     }
     
     func fetchMoreChatMessages(offset:Int) {
+        self.refreshing = true
+
         Message.fetchChatMessagesWithBlock(chat_id:QueenAIID + "-" + user_id, last_id: self.last_id) { (messages, last_id, error) in
             if error == nil{
-                if let realDatasource:NSMutableArray = NSMutableArray(array: messages!) {
-                    let tempDatasource:NSMutableArray = NSMutableArray(array: self.chatTable.data!)
-                    realDatasource.addObjects(from: tempDatasource as [AnyObject])
+                    let tempDatasource:[Message] = self.chatTable.data!
+                
                     self.last_id = last_id
-                    self.chatTable.data = realDatasource
+                    self.chatTable.data = messages! + tempDatasource
                     self.chatTable.scrollToRow(at: IndexPath(row: messages!.count, section:0), at: .top, animated: false)
-                }
+                
             }
             self.refreshing = false
         }
@@ -356,15 +366,13 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
                     var isDuplicate = false
                     if self.chatTable.data != nil {
                         for data in self.chatTable.data! {
-                            if let message = data as? Message{
-                                if message._id == result._id {
-                                    isDuplicate = true
-                                }
+                            if data._id == result._id {
+                                isDuplicate = true
                             }
                         }
                     }
                     if !isDuplicate {
-                        self.chatTable.data?.add(result)
+                        self.chatTable.data?.append(result)
                         self.chatTable.reloadData()
                         Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
                     }
@@ -394,7 +402,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     }
     
     func removeLoading()  {
-        self.chatTable.data?.removeLastObject()
+        self.chatTable.data?.removeLast()
         let indexPath = IndexPath(row: self.chatTable.data!.count, section: 0)
         self.chatTable.deleteRows(at: [indexPath], with: .left)
     }
@@ -406,7 +414,7 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     }
     
     func removeBlank()  {
-        self.chatTable.data?.removeLastObject()
+        self.chatTable.data?.removeLast()
         let indexPath = IndexPath(row: self.chatTable.data!.count, section: 0)
         self.chatTable.deleteRows(at: [indexPath], with: .right)
     }
@@ -460,15 +468,45 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
     
     @objc func send(sender: UIButton) {
         if let txt = chatTool.inputTool.text {
-            self.socket.emit("private_send", ["friend": QueenAIID, "text": txt])
+//            self.socket.emit("private_send", ["friend": QueenAIID, "text": txt])
+            chatTool.inputTool.text = ""
             
+            Message.postTextMessageWithBlock(chat_id: QueenAIID + "-" + self.user_id, user_id: self.user_id, text: txt, is_sender: 1, block: { (ai_message, error) in
+                if ai_message != nil {
+                    self.chatTable.data?.append(ai_message!)
+                    self.chatTable.reloadData()
+                    Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
+                }
+            })
+            Message.postTextMessageWithBlock(chat_id: QueenAIID + "-" + self.user_id, user_id: self.user_id, text: txt, is_sender: 0, block: { (ai_message, error) in
+                if ai_message != nil {
+                    self.chatTable.data?.append(ai_message!)
+                    self.chatTable.reloadData()
+                    Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
+                }
+            })
         }
+        
     }
     
     func renderTableView(){
         if let txt = chatTool.inputTool.text {
-            self.socket.emit("private_send", ["friend": QueenAIID, "text": txt])
-            
+//            self.socket.emit("private_send", ["friend": QueenAIID, "text": txt])
+            chatTool.inputTool.text = ""
+            Message.postTextMessageWithBlock(chat_id: QueenAIID + "-" + self.user_id, user_id: self.user_id, text: txt, is_sender: 1, block: { (ai_message, error) in
+                if ai_message != nil {
+                    self.chatTable.data?.append(ai_message!)
+                    self.chatTable.reloadData()
+                    Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
+                }
+            })
+            Message.postTextMessageWithBlock(chat_id: QueenAIID + "-" + self.user_id, user_id: self.user_id, text: txt, is_sender: 0, block: { (ai_message, error) in
+                if ai_message != nil {
+                    self.chatTable.data?.append(ai_message!)
+                    self.chatTable.reloadData()
+                    Timer.scheduledTimer(timeInterval: 0.2, target: self, selector: #selector(self.scrollTab), userInfo: nil, repeats: false)
+                }
+            })
         }
     }
     
@@ -523,26 +561,20 @@ class ChatViewController: ViewController , UITextFieldDelegate,UINavigationContr
         }
     }
     
-}
-
-extension ChatViewController {
-    
-    func textFieldShouldBeginEditing(textField: UITextField) -> Bool {
+    func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
         return true
     }
     
-    func textField(textField: UITextField, shouldChangeCharactersInRange range: NSRange, replacementString string: String) -> Bool {
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         
         return true
     }
     
-    func textFieldShouldReturn(textField: UITextField) -> Bool {
-        self.renderTableView()
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        self.send(sender: self.chatTool.senderTool)
         return false
     }
     
-    
 }
-
 
 

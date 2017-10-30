@@ -24,6 +24,7 @@
 		CE1E3E2E1F7ABBC0008E1DFD /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CE1E3E2C1F7ABBC0008E1DFD /* LaunchScreen.storyboard */; };
 		CE1E3E391F7ABBC0008E1DFD /* queen_iosTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1E3E381F7ABBC0008E1DFD /* queen_iosTests.swift */; };
 		CE1E3E441F7ABBC0008E1DFD /* queen_iosUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE1E3E431F7ABBC0008E1DFD /* queen_iosUITests.swift */; };
+		CE5615D31FA4F1FF00CE6376 /* UIViewExt.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE5615D21FA4F1FF00CE6376 /* UIViewExt.swift */; };
 		CEC8F2D24D0D496FC0FF6A69 /* Pods_queen_iosTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 23241C0CAE18043471735774 /* Pods_queen_iosTests.framework */; };
 		CEF2C0F71F93CF79000AB05D /* Member.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2C0F61F93CF79000AB05D /* Member.swift */; };
 		CEF2C0F91F93CFB0000AB05D /* Base.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF2C0F81F93CFB0000AB05D /* Base.swift */; };
@@ -103,6 +104,7 @@
 		CE1E3E3F1F7ABBC0008E1DFD /* queen-iosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "queen-iosUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		CE1E3E431F7ABBC0008E1DFD /* queen_iosUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = queen_iosUITests.swift; sourceTree = "<group>"; };
 		CE1E3E451F7ABBC0008E1DFD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		CE5615D21FA4F1FF00CE6376 /* UIViewExt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewExt.swift; sourceTree = "<group>"; };
 		CE9D6FB01F93B91F00D7D52A /* TPKeyboardAvoidingCollectionView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TPKeyboardAvoidingCollectionView.h; sourceTree = "<group>"; };
 		CE9D6FB11F93B91F00D7D52A /* TPKeyboardAvoidingTableView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TPKeyboardAvoidingTableView.h; sourceTree = "<group>"; };
 		CE9D6FB21F93B91F00D7D52A /* TPKeyboardAvoidingTableView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = TPKeyboardAvoidingTableView.m; sourceTree = "<group>"; };
@@ -186,6 +188,7 @@
 			children = (
 				CE05563A1F7D52550075DD8A /* StringExt.swift */,
 				CE05563B1F7D52550075DD8A /* UIColorExt.swift */,
+				CE5615D21FA4F1FF00CE6376 /* UIViewExt.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -641,6 +644,7 @@
 				CE05565E1F7D59AA0075DD8A /* ChatViewController.swift in Sources */,
 				CEF2C0FD1F98F3CC000AB05D /* SocketIOManager.swift in Sources */,
 				CEF2C0F71F93CF79000AB05D /* Member.swift in Sources */,
+				CE5615D31FA4F1FF00CE6376 /* UIViewExt.swift in Sources */,
 				CEF2C0FB1F93D123000AB05D /* News.swift in Sources */,
 				CE0556351F7D520C0075DD8A /* Constants.swift in Sources */,
 			);

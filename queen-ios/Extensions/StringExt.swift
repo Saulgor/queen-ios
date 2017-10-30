@@ -8,6 +8,36 @@
 
 import Foundation
 
+extension Date {
+    static func convertStringToDate(string:String) -> Date {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssxxxxx"
+        return formatter.date(from: string)!
+    }
+    
+    static func convertDateToString(date:Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm"
+        return formatter.string(from: date)
+    }
+    
+    static func convertDateToDayString(date:Date) -> String {
+        if daysBetween(start: date, end: Date()) == 0 {
+            return "今天"
+        } else if daysBetween(start: date, end: Date()) == 1 {
+            return "昨天"
+        } else {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            return formatter.string(from: date)
+        }
+    }
+    
+    public static func daysBetween(start: Date, end: Date) -> Int {
+        return Calendar.current.dateComponents([.day], from: start, to: end).day!
+    }
+}
+
 extension String {
     
     var floatValue: Float {

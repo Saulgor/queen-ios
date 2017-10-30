@@ -24,26 +24,32 @@ class Message {
     var sender_id:String = ""
     var receiver_id:String = ""
     var type:String = ""
-    var created_at:NSDate = NSDate()
+    var created_at:Date = Date()
     var custom_content:CustomContent = CustomContent()
     
     init() {
         
     }
     
+    init(type:String, created_at:Date) {
+        self.type = type
+        self.created_at = created_at
+    }
+
     init(_id:String, chat_id:NSNumber, sender_id:String, receiver_id:String, type:String) {
-        self._id = _id;
+        self._id = _id
         self.chat_id = chat_id;
-        self.sender_id = sender_id;
-        self.receiver_id = receiver_id;
-        self.type = type;
+        self.sender_id = sender_id
+        self.receiver_id = receiver_id
+        self.type = type
     }
     
-    static func postTextMessageWithBlock(chat_id:String, user_id:String, text:String,block:@escaping ChatMessageResultBlock){
+    static func postTextMessageWithBlock(chat_id:String, user_id:String, text:String, is_sender:Int, block:@escaping ChatMessageResultBlock){
         let params: Parameters = [
             "text": text,
             "chat_id": chat_id,
-            "user_id": user_id
+            "user_id": user_id,
+            "is_sender": is_sender
         ]
         Alamofire.request(TUASK_HOSTNAME + API_VERSION + "/messages", method: .post, parameters: params).responseJSON { response in
             print("Request: \(String(describing: response.request))")   // original url request
@@ -85,7 +91,7 @@ class Message {
                 }
                 
             case .failure:
-                block(NSArray(), "", nil)
+                block([Message](), "", nil)
             }
         }
     }
@@ -110,17 +116,17 @@ class ChatModelUtilities {
         return data
     }
     
-    static func _fetchChatMessagesFromResponse(json:JSON) -> NSArray{
+    static func _fetchChatMessagesFromResponse(json:JSON) -> [Message]{
         if json == JSON.null {
-            return NSArray()
+            return [Message]()
         }
         
         let data = json[HTTP_DATA]["messages"]
-        let messages = NSMutableArray()
+        var messages = [Message]()
         for object in data.arrayValue {
-            messages.add(_fetchChatMessageFromJSON(object: object))
+            messages.append(_fetchChatMessageFromJSON(object: object))
         }
-        return messages
+        return messages.reversed()
     }
     
     static func _fetchChatMessageFromResponse(json:JSON) -> Message{
@@ -154,7 +160,7 @@ class ChatModelUtilities {
         message.sender_id = object["sender_id"].stringValue
         message.receiver_id = object["receiver_id"].stringValue
         message.type = object["type"].stringValue
-//        message.created_at = NSDate.convertStringToDate(string: object["created_at"].stringValue)!
+        message.created_at = Date.convertStringToDate(string: object["created_at"].stringValue)
         message.custom_content = _fetchChatMessageCustomContentFromJSON(object:object["content"], type: message.type)
         
         return message
@@ -205,12 +211,15 @@ class ChatModelUtilities {
             let newsArray = NSMutableArray()
             for item in object["news"].arrayValue {
                 let news = News()
+                news.name = item["name"].stringValue
                 news.title = item["title"].stringValue
                 news.url = item["url"].stringValue
                 news.detail = item["detail"].stringValue
                 news.source = item["source"].stringValue
                 news.created_at = item["created_at"].stringValue
                 news.website = item["website"].stringValue
+                news.image = item["image"].stringValue
+                news.color = item["color"].stringValue
                 newsArray.add(news)
             }
             content.news = newsArray

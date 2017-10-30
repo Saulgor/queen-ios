@@ -9,6 +9,7 @@
 import Foundation
 
 class News: Base {
+    var name:String = ""
     var title:String = ""
     var url:String = ""
     var detail:String = ""
@@ -16,4 +17,6 @@ class News: Base {
     var created_at:String = ""
     var website:String = ""
     var image:String = ""
+    var color:String = ""
+    
 }

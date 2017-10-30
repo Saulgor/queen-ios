@@ -64,13 +64,19 @@ class ChatTableView : UITableView ,UITableViewDataSource , UITableViewDelegate{
     
     var current_user_id:String = "queen@test.com"
     
-    var data : NSMutableArray? {
+    var real_data : [Message]? {
         didSet {
-            print("didSet is :\(data)")
+            self.reloadData()
+        }
+    }
+    
+    var data : [Message]? {
+        didSet {
             guard let d = data, d.count > 0 else {
                 return
             }
-            self.reloadData()
+            self.real_data = self.insertDate(messages: data!)
+            
         }
     }
 
@@ -99,17 +105,13 @@ class ChatTableView : UITableView ,UITableViewDataSource , UITableViewDelegate{
     
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return data?.count ?? 0
-    }
-
-    func tableView(tableView: UITableView, willSelectRowAtIndexPath indexPath: IndexPath) -> NSIndexPath? {
-        return nil
+        return real_data?.count ?? 0
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-        if let d = data{
-            let dc = d[indexPath.row] as! Message
+        if let d = real_data{
+            let dc = d[indexPath.row]
             let type = dc.type
             if type == "text" {
                 let role = dc.sender_id == current_user_id ? Role.Sender : Role.Receiver
@@ -125,8 +127,13 @@ class ChatTableView : UITableView ,UITableViewDataSource , UITableViewDelegate{
                 cell.message_type = type
                 cell.role = role
                 cell.data = ChatViewData(message:dc , role: role)
-//                cell.contentImageButton.addTarget(self, action: #selector(ChatTableView.onImageDisplay(_:)), forControlEvents: .TouchUpInside)
+
                 cell.contentImage.tag = indexPath.row
+                return cell
+            }else if type == "date"{
+                let cell = tableView.dequeueReusableCell(withIdentifier: "DayChatCell", for: indexPath) as! DayChatCell
+                cell.message_type = type
+                cell.date = dc.created_at
                 return cell
             }else if type == "indicator"{
                 let role = Role.Receiver
@@ -162,12 +169,25 @@ class ChatTableView : UITableView ,UITableViewDataSource , UITableViewDelegate{
         
     }
     
-    func onImageDisplay(sender:UIButton) {
-        let message = self.data![sender.tag] as! Message
-    }
-    func onCheckOut(sender:UIButton) {
-        
-        
+    func insertDate(messages: [Message]) -> [Message] {
+        var new_messages:[Message] = []
+        for (index, element) in messages.enumerated() {
+            if index > 0 {
+                let daysBetween = Date.daysBetween(start: messages[index-1].created_at, end: messages[index].created_at)
+                if daysBetween > 0 {
+                    let message = Message(type: "date", created_at: messages[index].created_at)
+                    new_messages.append(message)
+                    new_messages.append(element)
+                }else {
+                    new_messages.append(element)
+                }
+            } else {
+                let message = Message(type: "date", created_at: messages[index].created_at)
+                new_messages.append(message)
+                new_messages.append(element)
+            }
+        }
+        return new_messages
     }
 }
 
@@ -198,8 +218,8 @@ class MessageChatViewCell: ChatViewCell {
 
             //2.设置约束
             let vd = ["headerImgView": self.headerImgView, "content": self.contentLbl, "bubble": self.bubbleImgView] as [String : Any]
-            let header_constraint_H_Format = data?.role == Role.Sender ? "[headerImgView(0)]-5-|" : "|-5-[headerImgView(30)]"
-            let header_constraint_V_Format = data?.role == Role.Sender ? "V:[headerImgView(30)]-8-|" : "V:[headerImgView(30)]-8-|"
+            let header_constraint_H_Format = data?.role == Role.Sender ? "[headerImgView(0)]-5-|" : "|-5-[headerImgView(40)]"
+            let header_constraint_V_Format = data?.role == Role.Sender ? "V:[headerImgView(40)]-8-|" : "V:[headerImgView(40)]-8-|"
             let bubble_constraint_H_Format = data?.role == Role.Sender ? "|-(>=10)-[bubble]-10-[headerImgView]" : "[headerImgView]-10-[bubble]-(>=10)-|"
             let bubble_constraint_V_Format = data?.role == Role.Sender ? "V:|-8-[bubble(>=35)]-8-|" : "V:|-8-[bubble(>=35)]-8-|"
             let content_constraint_H_Format = data?.role == Role.Sender ? "|-10-[content]-16-|" : "|-16-[content]-10-|"
@@ -290,40 +310,35 @@ class NewsChatViewCell: ChatViewCell {
             
             self.headerImgView.image = UIImage(named: "penguin")
             self.bubbleImgView.image = data?.role == Role.Sender ? UIImage(named: "bubbleRGrey") : UIImage(named: "bubbleLWhite")
-            //            if data?.message.attachment.characters.count > 0 {
-            //                self.contentImage.sd_setImage(with: NSURL(string: data!.message.attachment) as! URL)
-            //            }else{
-            //                self.contentImage.image = UIImage(named: "adidas")
-            //            }
+            
             let news = data!.message.custom_content.news
             if news != nil && news!.count > 0 {
-                self.newsTitleLbl.text = (news![0] as! News).title
-                self.newsDetailLbl.text = (news![0] as! News).detail
-                switch (news![0] as! News).website {
-                case "yahoonews":
-                    self.contentTitle.textColor = UIColor.yahooColor()
-                    self.contentTitle.text = "Yahoo"
-                    self.contentImage.image = UIImage(named:"yahoo")
-                    break
-                default:
-                    break
-                }
+                let range = UInt32(news!.count - 1)
+                let randomNumber = Int(arc4random_uniform(range))
+                print("RandomNumber: \(randomNumber)")
+                let item = news![randomNumber] as! News
+                self.newsTitleLbl.text = item.title
+                self.newsDetailLbl.text = item.detail
+                self.contentImage.sd_setImage(with: URL(string: item.image))
+                self.contentTitle.text = item.name
+                self.contentTitle.textColor = UIColor(hex: item.color)
+                self.contentLbl.text = Date.convertDateToString(date: data!.message.created_at)
             }
             
             
             //2.设置约束
             let vd = ["headerImgView": self.headerImgView, "content": self.contentNews, "bubble": self.bubbleImgView, "contentImageButton":self.contentImage, "contentTitle":self.contentTitle, "contentLbl":self.contentLbl, "newsTitleLbl":self.newsTitleLbl, "newsDetailLbl":self.newsDetailLbl] as [String : Any]
-            let header_constraint_H_Format = data?.role == Role.Sender ? "[headerImgView(0)]-5-|" : "|-5-[headerImgView(30)]"
-            let header_constraint_V_Format = data?.role == Role.Sender ? "V:[headerImgView(30)]-8-|" : "V:[headerImgView(30)]-8-|"
+            let header_constraint_H_Format = data?.role == Role.Sender ? "[headerImgView(0)]-5-|" : "|-5-[headerImgView(40)]"
+            let header_constraint_V_Format = data?.role == Role.Sender ? "V:[headerImgView(40)]-8-|" : "V:[headerImgView(40)]-8-|"
             let bubble_constraint_H_Format = data?.role == Role.Sender ? "|-80-[bubble]-10-[headerImgView]" : "[headerImgView]-10-[bubble]-80-|"
             let bubble_constraint_V_Format = data?.role == Role.Sender ? "V:|-8-[bubble(>=35)]-8-|" : "V:|-8-[bubble(>=35)]-8-|"
             let content_constraint_H_Format = data?.role == Role.Sender ? "|-5-[content]-12-|" : "|-12-[content]-5-|"
             let content_constraint_V_Format = data?.role == Role.Sender ? "V:|-5-[contentTitle(17)]-5-[content(80)]-6-[contentLbl]-5-|" : "V:|-5-[contentTitle(17)]-5-[content(80)]-6-[contentLbl]-5-|"
-            let contentlbl_constraint_H_Format = data?.role == Role.Sender ? "|-5-[contentLbl]-12-|" : "|-12-[contentLbl]-5-|"
+            let contentlbl_constraint_H_Format = data?.role == Role.Sender ? "|-10-[contentLbl]-17-|" : "|-17-[contentLbl]-10-|"
             let contenttitle_constraint_H_Format = data?.role == Role.Sender ? "|-10-[contentTitle]-17-|" : "|-17-[contentTitle]-10-|"
             let newstitle_constraint_H_Format = data?.role == Role.Sender ? "|-80-[newsTitleLbl]-5-|" : "|-5-[newsTitleLbl]-80-|"
             let newsdetail_constraint_H_Format = data?.role == Role.Sender ? "|-80-[newsDetailLbl]-5-|" : "|-5-[newsDetailLbl]-80-|"
-            let news_constraint_V_Format = data?.role == Role.Sender ? "V:|-5-[newsTitleLbl(17)]-2-[newsDetailLbl]-5-|" : "V:|-5-[newsTitleLbl(17)]-2-[newsDetailLbl]-5-|"
+            let news_constraint_V_Format = self.newsDetailLbl.text!.characters.count > 0 ? "V:|-5-[newsTitleLbl(17)]-2-[newsDetailLbl]-5-|" : "V:|-5-[newsTitleLbl]"
 
             let content_button_constraint_H_Format = data?.role == Role.Sender ? "|[contentImageButton(70)]" : "[contentImageButton(70)]|"
             let content_button_constraint_V_Format = data?.role == Role.Sender ? "V:|[contentImageButton(80)]|" : "V:|[contentImageButton(80)]|"
@@ -367,7 +382,7 @@ class NewsChatViewCell: ChatViewCell {
     lazy var headerImgView : UIImageView = {
         let v = UIImageView()
         v.translatesAutoresizingMaskIntoConstraints = false
-        v.layer.cornerRadius = 15
+        v.layer.cornerRadius = 20
         v.layer.masksToBounds = true
         return v
     }()
@@ -393,8 +408,10 @@ class NewsChatViewCell: ChatViewCell {
     lazy var contentLbl : UILabel = {
         let v = UILabel()
         v.translatesAutoresizingMaskIntoConstraints = false
+        v.textAlignment = .right
         v.numberOfLines = 0
-        v.font = UIFont.FontStyleNomarl
+        v.font = UIFont.NewsFontStyleNomarl
+        v.textColor = UIColor.newsGrayTextColor()
         v.numberOfLines = 3
         return v
     }()
@@ -645,6 +662,36 @@ class ActivityIndicatorChatViewCell: ChatViewCell {
         self.selectionStyle = .none
     }
     
+}
+
+class DayChatCell: ChatViewCell {
+    var date:Date? {
+        didSet {
+            dateLabel.text = Date.convertDateToDayString(date: date!)
+        }
+    }
+    
+    @IBOutlet weak var dateLabel: UILabel!
+    
+    
+    override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        followInit()
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        followInit()
+    }
+    
+    func followInit(){
+        self.selectionStyle = .none
+        if dateLabel != nil {
+            self.dateLabel.layer.cornerRadius = 4
+        }
+
+    }
+
 }
 
 class BlankChatViewCell: ChatViewCell {
